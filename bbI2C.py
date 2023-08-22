@@ -1,6 +1,12 @@
 from machine import	Pin
 import	utime
 
+class bbI2C_pin( Pin ):
+	def __init__( self, pin_number ):
+		self.pin	= Pin( pin_number, Pin.OUT )
+		self.pin.value( 0 )
+		self.pin.init( Pin.IN )
+
 def main():
 	initialize( 0, 1 )
 	sda	= pin_init( 0 )
@@ -14,8 +20,8 @@ def main():
 
 
 def initialize( sda_pin, scl_pin ):
-	sda	= pin_init( sda_pin )
-	scl	= pin_init( scl_pin )
+	sda	= bbI2C_pin( sda_pin )
+	scl	= bbI2C_pin( scl_pin )
 
 
 def pin_init( pin_number ):
