@@ -3,6 +3,15 @@ import	utime
 
 class bbI2C:
 	def __init__( self, sda_pin, scl_pin ):
+		self.sda	= Pin( sda_pin, Pin.OUT )
+		self.sda.value( 0 )
+		self.sda.init( Pin.IN )
+
+		self.scl	= Pin( scl_pin, Pin.OUT )
+		self.scl.value( 0 )
+		self.scl.init( Pin.IN )
+		
+	def __init__2( self, sda_pin, scl_pin ):
 		self.sda	= bbI2C_pin( sda_pin )
 		self.scl	= bbI2C_pin( scl_pin )
 
@@ -11,6 +20,8 @@ class bbI2C:
 		self.scl.init( Pin.OUT )
 		self.sda.init( Pin.IN )
 		self.scl.init( Pin.IN )
+
+
 
 class bbI2C_pin( Pin ):
 	def __init__( self, pin_number ):
