@@ -7,10 +7,10 @@ class bbI2C:
 		self.scl	= bbI2C_pin( scl_pin )
 
 	def pin_toggle( self ):
-		self.sda.output()
-		self.scl.output()
-		self.sda.input()
-		self.scl.input()
+		self.sda.init( Pin.OUT )
+		self.scl.init( Pin.OUT )
+		self.sda.init( Pin.IN )
+		self.scl.init( Pin.IN )
 
 class bbI2C_pin( Pin ):
 	def __init__( self, pin_number ):
