@@ -6,6 +6,12 @@ class bbI2C:
 		self.sda	= bbI2C_pin( sda_pin )
 		self.scl	= bbI2C_pin( scl_pin )
 
+	def pin_toggle( self ):
+		self.sda.output()
+		self.scl.output()
+		self.sda.input()
+		self.scl.input()
+
 class bbI2C_pin( Pin ):
 	def __init__( self, pin_number ):
 		self.pin	= Pin( pin_number, Pin.OUT )
@@ -22,10 +28,7 @@ def main():
 	i2c	= bbI2C( 0, 1 )
 
 	while True:
-		i2c.sda.output()
-		i2c.scl.output()
-		i2c.sda.input()
-		i2c.scl.input()
+		i2c.pin_toggle()
 
 if __name__ == "__main__":
 	main()
