@@ -1,6 +1,5 @@
-from machine import	Pin
-from utime import sleep_ms
-import	utime
+from	machine	import	Pin
+from	utime	import	sleep_ms
 
 class bbI2C:
 	def __init__( self, sda_pin, scl_pin ):
@@ -54,15 +53,11 @@ class bbI2C:
 			b	= 0
 			self.sda.init( Pin.IN )
 
-			# get 8 bits
-
 			for i in range( 7, -1, -1 ):
 				self.scl.init( Pin.OUT )
 				self.scl.init( Pin.IN )
 				b	|= self.sda.value() << i
 				
-			# send ACK/NACK
-
 			self.scl.init( Pin.OUT )
 			
 			if byte_count == (length - 1):
