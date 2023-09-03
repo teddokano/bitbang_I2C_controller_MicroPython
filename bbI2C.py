@@ -13,6 +13,8 @@ _SCL			= const( 1 )
 _SDA_PIN		= const( 0x0001 << _SDA )
 _SCL_PIN		= const( 0x0001 << _SCL )
 
+_WAIT			= 2
+
 class bbI2C:
 	bit_order	= tuple( n for n in range( 7, -1, -1 ) )
 	
@@ -32,6 +34,10 @@ class bbI2C:
 		reg_set	= ptr32( _GPIO_OE_SET )
 
 		reg_set[0] = _SDA_PIN
+
+		for wait in range( int( _WAIT ) ):
+			pass		
+		
 		reg_set[0] = _SCL_PIN
 
 	@micropython.viper
@@ -40,7 +46,15 @@ class bbI2C:
 		reg_clr	= ptr32( _GPIO_OE_CLR )
 
 		reg_set[ 0 ] = _SDA_PIN
+		
+		for wait in range( int( _WAIT ) ):
+			pass		
+				
 		reg_clr[ 0 ] = _SCL_PIN
+
+		for wait in range( int( _WAIT ) ):
+			pass		
+				
 		reg_clr[ 0 ] = _SDA_PIN
 	
 	@micropython.viper
@@ -86,7 +100,7 @@ class bbI2C:
 			for i in self.bit_order:
 				reg_set[ 0 ] = _SCL_PIN
 				
-				for n in range( 2 ):
+				for wait in range( int( _WAIT ) ):
 					pass
 				
 				reg_clr[ 0 ] = _SCL_PIN
