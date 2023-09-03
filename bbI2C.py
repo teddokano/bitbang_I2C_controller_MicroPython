@@ -48,7 +48,7 @@ class bbI2C:
 		nack	= False
 		reg_set	= ptr32( _GPIO_OE_SET )
 		reg_clr	= ptr32( _GPIO_OE_CLR )
-		
+
 		for b in bytes:
 			for i in self.bit_order:
 				reg_set[0] = _SCL_PIN
@@ -71,27 +71,36 @@ class bbI2C:
 		
 		return nack
 	
-	@micropython.native
-	def receive_bytes( self, length ):
+	@micropython.viper
+	def receive_bytes( self, length:int ):
+	
+		reg_in	= ptr32( _GPIO_IN )
+		reg_set	= ptr32( _GPIO_OE_SET )
+		reg_clr	= ptr32( _GPIO_OE_CLR )
+
 		bytes	= []
 		for byte_count in range( length ):
-			b	= 0
-			machine.mem32[ _GPIO_OE_CLR ] = _SDA_PIN
+			b:int	= 0
+			reg_clr[ 0 ] = _SDA_PIN
 
 			for i in self.bit_order:
-				machine.mem32[ _GPIO_OE_SET ] = _SCL_PIN
-				machine.mem32[ _GPIO_OE_CLR ] = _SCL_PIN
-				b	|= ((machine.mem32[ _GPIO_IN ] >> _SDA) & 0x1) << i
+				reg_set[ 0 ] = _SCL_PIN
 				
-			machine.mem32[ _GPIO_OE_SET ] = _SCL_PIN
+				for n in range( 2 ):
+					pass
+				
+				reg_clr[ 0 ] = _SCL_PIN
+				b	|= ((reg_in[ 0 ] >> _SDA) & 0x1) << int(i)
+				
+			reg_set[ 0 ] = _SCL_PIN
 			
-			if byte_count == (length - 1):
-				machine.mem32[ _GPIO_OE_CLR ] = _SDA_PIN
+			if int(byte_count) == (length - 1):
+				reg_clr[ 0 ] = _SDA_PIN
 			else:
-				machine.mem32[ _GPIO_OE_SET ] = _SDA_PIN
+				reg_set[ 0 ] = _SDA_PIN
 						
-			machine.mem32[ _GPIO_OE_CLR ] = _SCL_PIN
-			machine.mem32[ _GPIO_OE_SET ] = _SCL_PIN
+			reg_clr[ 0 ] = _SCL_PIN
+			reg_set[ 0 ] = _SCL_PIN
 			
 			bytes	+= [ b ]
 
