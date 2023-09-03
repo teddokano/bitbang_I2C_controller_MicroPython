@@ -19,7 +19,7 @@ class bbI2C:
 	def __init__( self, sda_pin, scl_pin ):
 		self.sda	= self.pin_init( sda_pin )
 		self.scl	= self.pin_init( scl_pin )
-		
+
 	def pin_init( self, pin_id ):
 		pin	= Pin( pin_id, Pin.OUT )
 		pin.value( 0 )
@@ -27,40 +27,51 @@ class bbI2C:
 		
 		return pin
 		
+	@micropython.viper
 	def start_condition( self ):
-		machine.mem32[ _GPIO_OE_SET ] = _SDA_PIN
-		machine.mem32[ _GPIO_OE_SET ] = _SCL_PIN
+		reg_set	= ptr32( _GPIO_OE_SET )
 
+		reg_set[0] = _SDA_PIN
+		reg_set[0] = _SCL_PIN
+
+	@micropython.viper
 	def stop_condition( self ):
-		machine.mem32[ _GPIO_OE_SET ] = _SDA_PIN
-		machine.mem32[ _GPIO_OE_CLR ] = _SCL_PIN
-		machine.mem32[ _GPIO_OE_CLR ] = _SDA_PIN
-		
-	def send_bytes( self, bytes ):
+		reg_set	= ptr32( _GPIO_OE_SET )
+		reg_clr	= ptr32( _GPIO_OE_CLR )
+
+		reg_set[ 0 ] = _SDA_PIN
+		reg_clr[ 0 ] = _SCL_PIN
+		reg_clr[ 0 ] = _SDA_PIN
+	
+	@micropython.viper
+	def send_bytes( self, bytes ) -> bool:
 		nack	= False
+		reg_set	= ptr32( _GPIO_OE_SET )
+		reg_clr	= ptr32( _GPIO_OE_CLR )
 		
 		for b in bytes:
 			for i in self.bit_order:
-				machine.mem32[ _GPIO_OE_SET ] = _SCL_PIN
-				if (b >> i) & 1:
-					machine.mem32[ _GPIO_OE_CLR ] = _SDA_PIN
+				reg_set[0] = _SCL_PIN
+				if (int(b) >> int(i)) & 0x1:
+					reg_clr[ 0 ]	 = _SDA_PIN
 				else:
-					machine.mem32[ _GPIO_OE_SET ] = _SDA_PIN
+					reg_set[ 0 ] = _SDA_PIN
 				
-				machine.mem32[ _GPIO_OE_CLR ] = _SCL_PIN
-			
-			machine.mem32[ _GPIO_OE_SET ] = _SCL_PIN
-			machine.mem32[ _GPIO_OE_CLR ] = _SDA_PIN
+				reg_clr[ 0 ]	= _SCL_PIN	
+				
+			reg_set[ 0 ] = _SCL_PIN
+			reg_clr[ 0 ] = _SDA_PIN
 
-			machine.mem32[ _GPIO_OE_CLR ] = _SCL_PIN
-			nack	= self.sda.value()
-			machine.mem32[ _GPIO_OE_SET ] = _SCL_PIN
+			reg_clr[ 0 ] = _SCL_PIN
+			nack	= bool( self.sda.value() )
+			reg_set[ 0 ] = _SCL_PIN
 
 			if nack:
 				return nack
 		
 		return nack
-			
+	
+	@micropython.native
 	def receive_bytes( self, length ):
 		bytes	= []
 		for byte_count in range( length ):
@@ -84,10 +95,11 @@ class bbI2C:
 			
 			bytes	+= [ b ]
 
-		return bytes
+		return list( bytes )
 
 	def write( self, addr, data ):
-		data	= [ addr & ~0x01 ] + data
+		data	= bytearray( [ addr & ~0x01 ] + data )
+		
 		self.start_condition()
 		self.send_bytes( data )
 		self.stop_condition()
