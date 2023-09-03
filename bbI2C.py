@@ -113,7 +113,14 @@ class bbI2C:
 			else:
 				reg_set[ 0 ] = _SDA_PIN
 						
+			for wait in range( int( _WAIT ) ):
+				pass
+				
 			reg_clr[ 0 ] = _SCL_PIN
+
+			for wait in range( int( _WAIT ) ):
+				pass
+				
 			reg_set[ 0 ] = _SCL_PIN
 			
 			bytes	+= [ b ]
