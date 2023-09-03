@@ -1,6 +1,18 @@
 from	machine	import	Pin
 from	utime	import	sleep_ms
 
+from	micropython	import	const
+
+_GPIO_IN		= const( 0xD0000004 )
+_GPIO_OE_SET	= const( 0xD0000024 )
+_GPIO_OE_CLR	= const( 0xD0000028 )
+
+_SDA			= const( 0 )
+_SCL			= const( 1 )
+
+_SDA_PIN		= const( 0x0001 << _SDA )
+_SCL_PIN		= const( 0x0001 << _SCL )
+
 class bbI2C:
 	bit_order	= tuple( n for n in range( 7, -1, -1 ) )
 	
@@ -16,33 +28,33 @@ class bbI2C:
 		return pin
 		
 	def start_condition( self ):
-		self.sda.init( Pin.OUT )
-		self.scl.init( Pin.OUT )
+		machine.mem32[ _GPIO_OE_SET ] = _SDA_PIN
+		machine.mem32[ _GPIO_OE_SET ] = _SCL_PIN
 
 	def stop_condition( self ):
-		self.sda.init( Pin.OUT )
-		self.scl.init( Pin.IN )
-		self.sda.init( Pin.IN )
+		machine.mem32[ _GPIO_OE_SET ] = _SDA_PIN
+		machine.mem32[ _GPIO_OE_CLR ] = _SCL_PIN
+		machine.mem32[ _GPIO_OE_CLR ] = _SDA_PIN
 		
 	def send_bytes( self, bytes ):
 		nack	= False
 		
 		for b in bytes:
 			for i in self.bit_order:
-				self.scl.init( Pin.OUT )
+				machine.mem32[ _GPIO_OE_SET ] = _SCL_PIN
 				if (b >> i) & 1:
-					self.sda.init( Pin.IN )
+					machine.mem32[ _GPIO_OE_CLR ] = _SDA_PIN
 				else:
-					self.sda.init( Pin.OUT )
+					machine.mem32[ _GPIO_OE_SET ] = _SDA_PIN
 				
-				self.scl.init( Pin.IN )
+				machine.mem32[ _GPIO_OE_CLR ] = _SCL_PIN
 			
-			self.scl.init( Pin.OUT )
-			self.sda.init( Pin.IN )
+			machine.mem32[ _GPIO_OE_SET ] = _SCL_PIN
+			machine.mem32[ _GPIO_OE_CLR ] = _SDA_PIN
 
-			self.scl.init( Pin.IN )
+			machine.mem32[ _GPIO_OE_CLR ] = _SCL_PIN
 			nack	= self.sda.value()
-			self.scl.init( Pin.OUT )
+			machine.mem32[ _GPIO_OE_SET ] = _SCL_PIN
 
 			if nack:
 				return nack
@@ -53,22 +65,22 @@ class bbI2C:
 		bytes	= []
 		for byte_count in range( length ):
 			b	= 0
-			self.sda.init( Pin.IN )
+			machine.mem32[ _GPIO_OE_CLR ] = _SDA_PIN
 
 			for i in self.bit_order:
-				self.scl.init( Pin.OUT )
-				self.scl.init( Pin.IN )
-				b	|= self.sda.value() << i
+				machine.mem32[ _GPIO_OE_SET ] = _SCL_PIN
+				machine.mem32[ _GPIO_OE_CLR ] = _SCL_PIN
+				b	|= ((machine.mem32[ _GPIO_IN ] >> _SDA) & 0x1) << i
 				
-			self.scl.init( Pin.OUT )
+			machine.mem32[ _GPIO_OE_SET ] = _SCL_PIN
 			
 			if byte_count == (length - 1):
-				self.sda.init( Pin.IN )
+				machine.mem32[ _GPIO_OE_CLR ] = _SDA_PIN
 			else:
-				self.sda.init( Pin.OUT )
+				machine.mem32[ _GPIO_OE_SET ] = _SDA_PIN
 						
-			self.scl.init( Pin.IN )
-			self.scl.init( Pin.OUT )
+			machine.mem32[ _GPIO_OE_CLR ] = _SCL_PIN
+			machine.mem32[ _GPIO_OE_SET ] = _SCL_PIN
 			
 			bytes	+= [ b ]
 
@@ -89,7 +101,7 @@ class bbI2C:
 		return data
 
 def main():
-	i2c	= bbI2C( 0, 1 )
+	i2c	= bbI2C( _SDA, _SCL )
 
 	while True:
 		i2c.write( 0x90, [ 0x00 ] )
