@@ -74,27 +74,30 @@ class bbI2C:
 
 		return bytes
 
-	def write( self, addr, data ):
-		data	= [ addr & ~0x01 ] + data
+	def writeto( self, addr, data ):
+		addr	<<= 1
+		data	= [ addr & ~0x01 ] + list( data )
 		self.start_condition()
 		self.send_bytes( data )
 		self.stop_condition()
 		
-	def read( self, addr, length, repeated_start = True ):
+	def readfrom( self, addr, length, repeated_start = True ):
+		addr	<<= 1
 		self.start_condition()
 		self.send_bytes( [ addr | 0x01 ] )
 		data	= self.receive_bytes( length )
 		self.stop_condition()
 		
-		return data
+		return bytearray( data )
+
 
 def main():
 	i2c	= bbI2C( 0, 1 )
 
 	while True:
-		i2c.write( 0x90, [ 0x00 ] )
-		data	= i2c.read( 0x90, 2 )
-		print( f"{data}" )
+		i2c.writeto( 0x90 >> 1, [ 0x00 ] )
+		data	= i2c.readfrom( 0x90, 2 )
+		print( f"{list(data)}" )
 		sleep_ms( 100 )
 		
 if __name__ == "__main__":
