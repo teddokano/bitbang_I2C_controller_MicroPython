@@ -1,7 +1,7 @@
 # Bitbang I²C controller by MicroPython
 
 ## What is this?
-Bitbang I²C sample using Arduino-Pico. This code has been made to explain how an I²C controller to can be implemanted.  
+Bitbang I²C sample using MicroPython. This code has been made to explain how an I²C controller to can be implemanted.  
 The **maximum bit clock frequency is 20kHz** due to MicroPython's IO speed.  
 ![mp_write_read_20kHz.png](https://github.com/teddokano/bitbang_I2C_controller_MicroPython/blob/main/reference/pic/mp_write_read_20kHz.png)
 
