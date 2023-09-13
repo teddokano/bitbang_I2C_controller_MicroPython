@@ -19,15 +19,21 @@ class bbI2C:
 		self.sda.init( Pin.OUT )
 		self.scl.init( Pin.OUT )
 
-	def stop_condition( self ):
-		self.sda.init( Pin.OUT )
-		self.scl.init( Pin.IN )
-		self.sda.init( Pin.IN )
+	def stop_condition( self, stop = True ):
+		if stop:
+			self.sda.init( Pin.OUT )
+			self.scl.init( Pin.IN )
+			self.sda.init( Pin.IN )
+		else:
+			self.scl.init( Pin.IN )
+			
 		
 	def send_bytes( self, bytes ):
-		nack	= False
+		ack_count	= 0
 		
 		for b in bytes:
+		
+			#	sending data bits
 			for i in self.bit_order:
 				self.scl.init( Pin.OUT )
 				if (b >> i) & 1:
@@ -37,17 +43,20 @@ class bbI2C:
 				
 				self.scl.init( Pin.IN )
 			
+			#	getting ACK/NACK
 			self.scl.init( Pin.OUT )
 			self.sda.init( Pin.IN )
 
 			self.scl.init( Pin.IN )
-			nack	= self.sda.value()
+			ack	= self.sda.value()
 			self.scl.init( Pin.OUT )
 
-			if nack:
-				return nack
-		
-		return nack
+			if ack:
+				return ack_count
+			else:
+				ack_count	+= 1
+					
+		return ack_count
 			
 	def receive_bytes( self, length ):
 		bytes	= []
@@ -55,6 +64,7 @@ class bbI2C:
 			b	= 0
 			self.sda.init( Pin.IN )
 
+			#	getting data bits
 			for i in self.bit_order:
 				self.scl.init( Pin.OUT )
 				self.scl.init( Pin.IN )
@@ -74,31 +84,41 @@ class bbI2C:
 
 		return bytes
 
-	def writeto( self, addr, data ):
-		addr	<<= 1
-		data	= [ addr & ~0x01 ] + list( data )
+	def writeto( self, addr, data, stop = True ):
+		data	= [ (addr << 1) & ~0x01 ] + list( data )
 		self.start_condition()
-		self.send_bytes( data )
-		self.stop_condition()
+		ack_count	= self.send_bytes( data )
+		self.stop_condition( stop )
 		
-	def readfrom( self, addr, length, repeated_start = True ):
-		addr	<<= 1
+		return ack_count
+		
+	def readfrom( self, addr, length, stop = True ):
 		self.start_condition()
-		self.send_bytes( [ addr | 0x01 ] )
+		num_of_ack	= self.send_bytes( [ (addr << 1) | 0x01 ] )
+		
+		if not num_of_ack:
+			return num_of_ack
+			
 		data	= self.receive_bytes( length )
-		self.stop_condition()
+		self.stop_condition( stop )
 		
 		return bytearray( data )
 
-
 def main():
-	i2c	= bbI2C( 0, 1 )
+	i2c				= bbI2C( 0, 1 )
+	target_address	= 0x90 >>1
 
 	while True:
-		i2c.writeto( 0x90 >> 1, [ 0x00 ] )
-		data	= i2c.readfrom( 0x90, 2 )
-		print( f"{list(data)}" )
-		sleep_ms( 100 )
+		send_data	= [ 0x00 ]
+		num_of_ack	= i2c.writeto( target_address, send_data, stop = False )
+		
+		if num_of_ack == (len( send_data ) + 1):
+			data	= i2c.readfrom( target_address, 2 )
+			print( f"{list(data)}" )
+		else:
+			print( f"target ({target_address}) returned NACK" )	
+		
+		#sleep_ms( 100 )
 		
 if __name__ == "__main__":
 	main()
