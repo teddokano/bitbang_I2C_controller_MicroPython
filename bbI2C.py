@@ -1,5 +1,6 @@
-from	machine	import	Pin
-from	utime	import	sleep_ms
+from	machine		import	Pin
+from	utime		import	sleep_ms
+from	micropython	import	const
 
 class bbI2C:
 	bit_order	= tuple( n for n in range( 7, -1, -1 ) )
@@ -16,17 +17,13 @@ class bbI2C:
 		return pin
 		
 	def start_condition( self ):
+		self.scl.init( Pin.IN )
 		self.sda.init( Pin.OUT )
-		self.scl.init( Pin.OUT )
 
 	def stop_condition( self, stop = True ):
-		if stop:
 			self.sda.init( Pin.OUT )
 			self.scl.init( Pin.IN )
-			self.sda.init( Pin.IN )
-		else:
-			self.scl.init( Pin.IN )
-			
+			self.sda.init( Pin.IN )			
 		
 	def send_bytes( self, bytes ):
 		ack_count	= 0
@@ -52,7 +49,7 @@ class bbI2C:
 			self.scl.init( Pin.OUT )
 
 			if ack:
-				return ack_count
+				raise OSError( 5 )
 			else:
 				ack_count	+= 1
 					
@@ -88,7 +85,9 @@ class bbI2C:
 		data	= [ (addr << 1) & ~0x01 ] + list( data )
 		self.start_condition()
 		ack_count	= self.send_bytes( data )
-		self.stop_condition( stop )
+		
+		if stop:
+			self.stop_condition()
 		
 		return ack_count
 		
@@ -100,8 +99,10 @@ class bbI2C:
 			return num_of_ack
 			
 		data	= self.receive_bytes( length )
-		self.stop_condition( stop )
-		
+
+		if stop:
+			self.stop_condition()
+
 		return bytearray( data )
 
 def main():
