@@ -28,7 +28,7 @@ class bbI2C:
 	def send_bytes( self, bytes ):
 		ack_count	= 0
 		
-		for b in bytes:
+		for nb, b in enumerate( bytes ):
 		
 			#	sending data bits
 			for i in self.bit_order:
@@ -45,14 +45,20 @@ class bbI2C:
 			self.sda.init( Pin.IN )
 
 			self.scl.init( Pin.IN )
-			ack	= self.sda.value()
+			nack	= self.sda.value()
 			self.scl.init( Pin.OUT )
 
-			if ack:
-				raise OSError( 5 )
+			if (nb == 0):
+				if nack:
+					raise OSError( 5 )
+				else:
+					pass			
 			else:
-				ack_count	+= 1
-					
+				if nack:
+					return ack_count
+				else:
+					ack_count	+= 1		
+
 		return ack_count
 			
 	def receive_bytes( self, length ):
@@ -93,11 +99,7 @@ class bbI2C:
 		
 	def readfrom( self, addr, length, stop = True ):
 		self.start_condition()
-		num_of_ack	= self.send_bytes( [ (addr << 1) | 0x01 ] )
-		
-		if not num_of_ack:
-			return num_of_ack
-			
+		self.send_bytes( [ (addr << 1) | 0x01 ] )
 		data	= self.receive_bytes( length )
 
 		if stop:
