@@ -26,7 +26,9 @@ class bbI2C:
 		self.sda.init( Pin.IN )			
 		
 	def send_bytes( self, bytes ):
-		for nb, b in enumerate( bytes ):
+		ack_count	= -1
+
+		for b in bytes:
 		
 			#	sending data bits
 			for i in self.bit_order:
@@ -42,16 +44,10 @@ class bbI2C:
 			nack	= self.sda.value()
 			self.scl.init( Pin.OUT )
 
-			if (nb == 0):
-				if nack:
-					raise OSError( uerrno.EIO )
-				else:
-					ack_count	= 0
+			if nack:
+				return ack_count
 			else:
-				if nack:
-					return ack_count
-				else:
-					ack_count	+= 1		
+				ack_count	+= 1		
 
 		return ack_count
 			
@@ -82,8 +78,11 @@ class bbI2C:
 		self.start_condition()
 		ack_count	= self.send_bytes( data )
 		
-		if stop:
+		if stop or (ack_count == -1):
 			self.stop_condition()
+		
+		if ack_count == -1:
+			raise uerrno.EIO
 		
 		return ack_count
 		
