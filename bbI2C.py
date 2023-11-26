@@ -82,18 +82,23 @@ class bbI2C:
 			self.stop_condition()
 		
 		if ack_count == -1:
-			raise uerrno.EIO
+			raise OSError( uerrno.EIO )
 		
 		return ack_count
 		
 	def readfrom( self, addr, length, stop = True ):
 		self.start_condition()
-		self.send_bytes( [ (addr << 1) | 0x01 ] )
-		data	= self.receive_bytes( length )
+		nack	= self.send_bytes( [ (addr << 1) | 0x01 ] )
+		
+		if not nack:
+			data	= self.receive_bytes( length )
 
 		if stop:
 			self.stop_condition()
-
+			
+		if nack:
+			raise OSError( uerrno.EIO )
+			
 		return bytearray( data )
 
 def main():
