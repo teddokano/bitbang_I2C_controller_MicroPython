@@ -1,6 +1,5 @@
 from	machine		import	Pin
 from	utime		import	sleep_ms
-from	micropython	import	const
 
 class bbI2C:
 	bit_order	= tuple( n for n in range( 7, -1, -1 ) )
@@ -20,24 +19,18 @@ class bbI2C:
 		self.scl.init( Pin.IN )
 		self.sda.init( Pin.OUT )
 
-	def stop_condition( self, stop = True ):
-			self.sda.init( Pin.OUT )
-			self.scl.init( Pin.IN )
-			self.sda.init( Pin.IN )			
+	def stop_condition( self ):
+		self.sda.init( Pin.OUT )
+		self.scl.init( Pin.IN )
+		self.sda.init( Pin.IN )			
 		
 	def send_bytes( self, bytes ):
-		ack_count	= 0
-		
 		for nb, b in enumerate( bytes ):
 		
 			#	sending data bits
 			for i in self.bit_order:
 				self.scl.init( Pin.OUT )
-				if (b >> i) & 1:
-					self.sda.init( Pin.IN )
-				else:
-					self.sda.init( Pin.OUT )
-				
+				self.sda.init( Pin.IN if (b >> i) & 1 else Pin.OUT )
 				self.scl.init( Pin.IN )
 			
 			#	getting ACK/NACK
@@ -52,7 +45,7 @@ class bbI2C:
 				if nack:
 					raise OSError( 5 )
 				else:
-					pass			
+					ack_count	= 0
 			else:
 				if nack:
 					return ack_count
@@ -73,13 +66,9 @@ class bbI2C:
 				self.scl.init( Pin.IN )
 				b	|= self.sda.value() << i
 				
+			#	sending ACK/NACK
 			self.scl.init( Pin.OUT )
-			
-			if byte_count == (length - 1):
-				self.sda.init( Pin.IN )
-			else:
-				self.sda.init( Pin.OUT )
-						
+			self.sda.init( Pin.IN if byte_count == (length - 1) else Pin.OUT )
 			self.scl.init( Pin.IN )
 			self.scl.init( Pin.OUT )
 			
