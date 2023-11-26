@@ -1,5 +1,6 @@
 from	machine		import	Pin
 from	utime		import	sleep_ms
+import	uerrno
 
 class bbI2C:
 	bit_order	= tuple( n for n in range( 7, -1, -1 ) )
@@ -43,7 +44,7 @@ class bbI2C:
 
 			if (nb == 0):
 				if nack:
-					raise OSError( 5 )
+					raise OSError( uerrno.EIO )
 				else:
 					ack_count	= 0
 			else:
