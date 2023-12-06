@@ -1,5 +1,4 @@
 from	machine		import	Pin
-from	utime		import	sleep_ms
 import	uerrno
 
 class bbI2C:
@@ -114,8 +113,6 @@ def main():
 			print( f"{list(data)}" )
 		else:
 			print( f"target ({target_address}) returned NACK" )	
-		
-		#sleep_ms( 100 )
-		
+
 if __name__ == "__main__":
 	main()
