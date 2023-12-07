@@ -4,16 +4,14 @@ import	uerrno
 class bbI2C:
 	bit_order	= tuple( n for n in range( 7, -1, -1 ) )
 	
-	def __init__( self, sda_pin, scl_pin ):
-		self.sda	= self.pin_init( sda_pin )
-		self.scl	= self.pin_init( scl_pin )
+	def __init__( self, sda = None, scl = None ):
+		self.sda	= sda
+		self.scl	= scl
 		
-	def pin_init( self, pin_id ):
-		pin	= Pin( pin_id, Pin.OUT )
-		pin.value( 0 )
-		pin.init( Pin.IN )
-		
-		return pin
+		self.sda.value( 0 )
+		self.scl.value( 0 )
+		self.sda.init( Pin.IN )
+		self.scl.init( Pin.IN )
 		
 	def start_condition( self ):
 		self.scl.init( Pin.IN )
@@ -101,18 +99,16 @@ class bbI2C:
 		return bytearray( data )
 
 def main():
-	i2c				= bbI2C( 0, 1 )
-	target_address	= 0x90 >>1
+	i2c				= bbI2C( sda = Pin( 0 ), scl = Pin( 1 ) )
+	target_address	= 0xEC >>1
 
 	while True:
-		send_data	= [ 0x00 ]
-		num_of_ack	= i2c.writeto( target_address, send_data, stop = False )
+		i2c.writeto( target_address, [ 0x88 ], stop = False )
+		data	= i2c.readfrom( target_address, 2 )
+		print( f"{list(data)}" )
 		
-		if num_of_ack == (len( send_data ) + 1):
-			data	= i2c.readfrom( target_address, 2 )
-			print( f"{list(data)}" )
-		else:
-			print( f"target ({target_address}) returned NACK" )	
+		sleep_ms( 100 )
 
 if __name__ == "__main__":
+	from	utime	import	sleep_ms
 	main()
