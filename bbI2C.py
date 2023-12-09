@@ -1,3 +1,8 @@
+"""
+# Lisence
+This project is licensed under the MIT License, see the LICENSE.txt file for details
+https://github.com/teddokano/bitbang_I2C_controller_MicroPython
+"""
 from	machine		import	Pin
 import	uerrno
 
@@ -105,7 +110,7 @@ def main():
 	while True:
 		i2c.writeto( target_address, [ 0x88 ], stop = False )
 		data	= i2c.readfrom( target_address, 2 )
-		print( f"{list(data)}" )
+		print( list(data) )
 		
 		sleep_ms( 100 )
 
