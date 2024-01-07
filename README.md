@@ -12,3 +12,5 @@ A NACK response from target can be handled as an error which returned from metho
 
 Clock stretch and further options (clock syns/multi-controller) are not supported.  
 
+## Sample of usage
+This bbI2C class usage sample is available in [`BME280.py`](https://github.com/teddokano/BME280_MicroPython)
